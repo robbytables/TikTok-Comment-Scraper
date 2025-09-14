@@ -29,6 +29,7 @@ class TikTokCommentScraper:
         """
         self.delay_range = delay_range
         self.debug = debug
+        self.headless = headless
         if debug:
             logging.getLogger().setLevel(logging.DEBUG)
         self.setup_driver(headless)
@@ -87,16 +88,6 @@ class TikTokCommentScraper:
     def try_click_load_more(self):
         """Try to click various load more buttons"""
         load_more_patterns = [
-            # Original patterns for main comment loading
-            # "//div[contains(text(), 'View more comments')]",
-            # "//div[contains(text(), 'Load more')]",
-            # "//div[contains(text(), 'Show more')]",
-            # "//button[contains(text(), 'View more')]",
-            # "//button[contains(text(), 'Load more')]",
-            # "*[data-e2e='comment-load-more']",
-            # "*[class*='load-more']",
-            # "*[class*='LoadMore']",
-            # Specific patterns for reply expansion
             # "View 1 reply"
             "//span[normalize-space(text())='View 1 reply']",
             "//div[normalize-space(text())='View 1 reply']",
@@ -168,7 +159,7 @@ class TikTokCommentScraper:
 
         return max_count
 
-    def scroll_to_load_comments(self, max_scrolls=500, scroll_pause=2):
+    def scroll_to_load_comments(self, max_scrolls=1000, scroll_pause=2):
         """
         Scroll down to load all comments with enhanced detection
 
@@ -234,7 +225,7 @@ class TikTokCommentScraper:
 
         try:
             self.driver.get(video_url)
-            self.random_delay(5, 8)  # Wait for page to load
+            self.random_delay(2, 5)  # Wait for page to load
 
             # Extract video metadata
             video_data = self.extract_video_metadata()
@@ -317,14 +308,6 @@ class TikTokCommentScraper:
 
         if self.debug:
             logger.debug("=== STARTING COMMENT EXTRACTION ===")
-
-        # Try multiple selector strategies
-        # strategies = [
-        #     self.strategy_data_attributes,
-        #     self.strategy_class_names,
-        #     self.strategy_text_content,
-        #     self.strategy_generic_divs,
-        # ]
 
         comments = self.strategy_data_attribute()
         if comments:
@@ -458,8 +441,12 @@ class TikTokCommentScraper:
                     self.save_data(all_data, output_file)
                     logger.info(f"Progress saved: {i}/{len(urls)} URLs processed")
 
+                # Close the driver betwen urls
+                self.refresh()
+
                 # Random delay between URLs
-                self.random_delay(10, 20)
+                self.random_delay(1, 5)
+
 
             except Exception as e:
                 logger.error(f"Failed to process URL {url}: {e}")
@@ -531,6 +518,12 @@ class TikTokCommentScraper:
         if hasattr(self, "driver"):
             self.driver.quit()
 
+    def refresh(self):
+        """Close and reopen the browser driver"""
+        self.close()
+        self.setup_driver(self.headless)
+
+
 
 # Test single URL function
 def test_single_url(url, debug=True):
@@ -568,7 +561,7 @@ if __name__ == "__main__":
     #    test_single_url(test_url)
     # else:
     # Initialize scraper for batch processing
-    scraper = TikTokCommentScraper(headless=False, debug=False)
+    scraper = TikTokCommentScraper(headless=True, debug=False)
 
     try:
         # Scrape from CSV file
