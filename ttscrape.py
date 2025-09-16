@@ -33,6 +33,7 @@ class TikTokCommentScraper:
         if debug:
             logging.getLogger().setLevel(logging.DEBUG)
         self.setup_driver(headless)
+        self.errors = []
 
     def setup_driver(self, headless):
         """Set up Chrome WebDriver with appropriate options"""
@@ -227,6 +228,9 @@ class TikTokCommentScraper:
             self.driver.get(video_url)
             self.random_delay(2, 5)  # Wait for page to load
 
+            # For debugging...
+            self.current_video = video_url
+
             # Extract video metadata
             video_data = self.extract_video_metadata()
 
@@ -352,7 +356,7 @@ class TikTokCommentScraper:
     def extract_single_comment_data(self, element, index):
         try:
             parent = element.find_element(By.XPATH, "..")
-            comment_parts = parent.text.split("\n")
+            comment_parts = parent.text.replace('\n· Creator', '').split("\n")
             username = comment_parts[0]
             text = comment_parts[1]
             date = comment_parts[2]
@@ -396,6 +400,10 @@ class TikTokCommentScraper:
             return comment_data
         except Exception as e:
             logger.error(f"Failure in extracting comment data {e}")
+            # Log to file
+            self.errors.append({"error": str(e), "current_video": self.current_video, "index": index})
+            with open("error_log", "w", encoding="utf-8") as f:
+                json.dump(self.errors, f, ensure_ascii=False, indent=2)
             return {}
 
     def scrape_urls_from_csv(self, csv_file, url_column="url", output_file=None):
@@ -436,8 +444,8 @@ class TikTokCommentScraper:
                         f"  Sample comment: {data['comments'][0].get('text', 'No text')[:100]}..."
                     )
 
-                # Save progress periodically
-                if output_file and i % 5 == 0:  # Save every 5 URLs
+                # Save progress
+                if output_file:
                     self.save_data(all_data, output_file)
                     logger.info(f"Progress saved: {i}/{len(urls)} URLs processed")
 
@@ -555,11 +563,6 @@ def test_single_url(url, debug=True):
 
 # Example usage
 if __name__ == "__main__":
-    # Test with a single URL first
-    # test_url = input("Enter TikTok URL to test (or press Enter to skip): ").strip()
-    # if test_url:
-    #    test_single_url(test_url)
-    # else:
     # Initialize scraper for batch processing
     scraper = TikTokCommentScraper(headless=True, debug=False)
 
