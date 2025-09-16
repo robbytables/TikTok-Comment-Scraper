@@ -4,7 +4,7 @@ A Python tool for collecting comments and replies from TikTok videos for academi
 
 ## Overview
 
-This script enables researchers to systematically collect comments and their associated replies from TikTok videos. It was developed specifically for academic research in areas such as human-computer interaction, social media studies, digital anthropology, and computational social science.
+This script enables researchers to systematically collect comments and their associated replies from TikTok videos. It was developed specifically for academic research in areas such as human-computer interaction, social media studies, digital anthropology, and computational social science. **NOTE** You'll need some basic understanding of how to run Python scripts to install and run this software. If it behave well, great. Otherwise, you might need some level of Python coding abilities to troubleshoot or understand what's going on.
 
 ## Features
 
